@@ -4,6 +4,7 @@ import { useTheme } from '../../../context/ThemeContext';
 import { useCart } from '../../../context/CartContext';
 import { useWishlist } from '../../../context/WishlistContext';
 import { Compass, ShoppingCart, Home, Heart, User, Sun, Moon } from 'lucide-react';
+import logo from '../../../assets/images/Logo.png';
 
 const Navbar = () => {
   const location = useLocation();
@@ -29,7 +30,7 @@ const Navbar = () => {
       <div className={`hidden md:flex sticky top-0 z-50 w-full h-16 ${theme.navBg} border-b ${theme.border} px-4 md:px-8 lg:px-16 items-center justify-between font-poppins shadow-sm transition-colors duration-300`}>
         {/* Left: Logo */}
         <div className="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/home')}>
-          <img src="src\assets\images\Logo.png" alt="" />
+          <img src={logo} alt="Logo" className="h-9 w-auto object-contain" />
         </div>
 
         {/* Center: Links */}
