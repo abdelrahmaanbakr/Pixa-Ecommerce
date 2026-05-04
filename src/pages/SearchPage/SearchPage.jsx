@@ -248,7 +248,7 @@ const SearchPage = () => {
                   className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
                 >
                   {filteredProducts.map(product => (
-                    <motion.div key={product.id} variants={itemVariants}>
+                    <motion.div key={product.id} variants={itemVariants} className="h-full">
                       <ProductCard product={product} />
                     </motion.div>
                   ))}

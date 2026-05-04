@@ -290,10 +290,10 @@ const HomePage = () => {
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              className="px-5 lg:px-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 items-start content-start"
+              className="px-5 lg:px-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 content-start"
             >
               {filteredProducts.map((product) => (
-                <motion.div key={product.id} variants={itemVariants}>
+                <motion.div key={product.id} variants={itemVariants} className="h-full">
                   <ProductCard product={product} />
                 </motion.div>
               ))}

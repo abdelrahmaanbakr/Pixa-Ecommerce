@@ -51,9 +51,9 @@ const ProductCard = ({ product }) => {
       onClick={handleNavigate}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className={`relative rounded-xl overflow-hidden ${theme.card} shadow-sm cursor-pointer active:scale-95 transition-all`}
+      className={`relative h-full rounded-xl overflow-hidden ${theme.card} shadow-sm cursor-pointer active:scale-95 transition-all flex flex-col`}
     >
-      <div className="relative overflow-hidden rounded-xl">
+      <div className="relative overflow-hidden rounded-t-xl shrink-0">
         <img
           src={product.image}
           alt={product.name}
@@ -85,19 +85,19 @@ const ProductCard = ({ product }) => {
         </button>
       </div>
 
-      <div className="p-3">
-        <h3 className={`text-sm font-bold line-clamp-2 leading-snug mb-1 ${theme.text}`}>
+      <div className="p-3 flex flex-1 flex-col">
+        <h3 className={`min-h-[38px] text-sm font-bold line-clamp-2 leading-snug mb-1 ${theme.text}`}>
           {product.name}
         </h3>
 
-        <div className="flex items-center gap-1 mb-2">
+        <div className="min-h-[32px] flex items-start gap-1 mb-2">
           <StarRating rating={product.rating} />
-          <span className={`text-[11px] font-medium ${theme.textSecondary}`}>
+          <span className={`text-[11px] font-medium leading-tight ${theme.textSecondary}`}>
             {product.rating} | {product.reviews} reviews
           </span>
         </div>
 
-        <p className="text-sm font-black text-[#4A90E2]">
+        <p className="mt-auto text-sm font-black text-[#4A90E2]">
           {formatPrice(product.price)}
         </p>
       </div>
