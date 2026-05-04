@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
-import logo from "../../assets/images/logo.png";
+import logo from "../../assets/images/Logo.png"
 import onBoardingImage from "../../assets/images/on_boarding_image.png";
 
 const pageVariants = {
