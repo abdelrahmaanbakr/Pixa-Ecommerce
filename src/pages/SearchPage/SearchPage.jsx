@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { mockData } from '../../data/mockData';
 import { formatPrice } from '../../utils/formatPrice';
 import { useTheme } from '../../context/ThemeContext';
 import ProductCard from '../../components/common/ProductCard';
 import ProductCardSkeleton from '../../components/ui/ProductCardSkeleton';
-import { ArrowLeft, SlidersHorizontal, Search, Star, SearchX } from 'lucide-react';
+import { ArrowLeft, SlidersHorizontal, Search, Star, SearchX, X } from 'lucide-react';
 
 const pageVariants = {
   initial: { opacity: 0, x: 20 },
@@ -26,31 +26,42 @@ const containerVariants = {
 };
 
 const itemVariants = {
-  hidden: { 
-    opacity: 0, 
+  hidden: {
+    opacity: 0,
     scale: 0.8,
     y: 20
   },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     scale: 1,
     y: 0,
     transition: {
-      type: "spring",
+      type: 'spring',
       stiffness: 200,
       damping: 20
     }
   }
 };
 
+const categoryOptions = ['All', 'Electronics', 'Fashion', 'Sports', 'Bags', 'Accessories'];
+const priceOptions = [
+  { label: 'Under Rp 100K', max: 100000 },
+  { label: 'Rp 100K - 500K', min: 100000, max: 500000 },
+  { label: 'Above Rp 500K', min: 500000 },
+];
+
 const SearchPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isDark, theme } = useTheme();
-  const [searchQuery, setSearchQuery] = useState('');
+  const initialQuery = searchParams.get('q') || '';
+  const initialCategory = searchParams.get('category') || 'All';
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [activeTab, setActiveTab] = useState('Products');
-  const [activeCategory, setActiveCategory] = useState('All Products');
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
+  const [activeCategory, setActiveCategory] = useState(initialCategory);
+  const [priceFilter, setPriceFilter] = useState(null);
+  const [sortBy, setSortBy] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(true);
   const hasMounted = useRef(false);
 
@@ -61,6 +72,11 @@ const SearchPage = () => {
 
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    setSearchQuery(searchParams.get('q') || '');
+    setActiveCategory(searchParams.get('category') || 'All');
+  }, [searchParams]);
 
   useEffect(() => {
     if (!hasMounted.current) {
@@ -76,19 +92,38 @@ const SearchPage = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // TODO: Replace with API call when backend is ready
-  const categories = ['All Products', 'Electronics', 'Sports', 'Fashion'];
-  const filteredProducts = mockData.filter((product) => {
-    const matchSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchCategory = activeCategory === 'All Products'
-      ? true
-      : product.category === activeCategory;
-    const matchPrice =
-      (!minPrice || product.price >= Number(minPrice)) &&
-      (!maxPrice || product.price <= Number(maxPrice));
+  const activeFilters = [
+    activeCategory !== 'All',
+    priceFilter !== null,
+    sortBy !== ''
+  ].filter(Boolean).length;
 
-    return matchSearch && matchCategory && matchPrice;
-  });
+  const clearAllFilters = () => {
+    setActiveCategory('All');
+    setPriceFilter(null);
+    setSortBy('');
+    setShowFilters(false);
+  };
+
+  const filteredProducts = mockData
+    .filter((product) => {
+      const matchSearch = !searchQuery ||
+        product.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchCategory = activeCategory === 'All' ||
+        product.category === activeCategory;
+      const matchPrice = !priceFilter || (
+        (!priceFilter.min || product.price >= priceFilter.min) &&
+        (!priceFilter.max || product.price <= priceFilter.max)
+      );
+
+      return matchSearch && matchCategory && matchPrice;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'price-asc') return a.price - b.price;
+      if (sortBy === 'price-desc') return b.price - a.price;
+      if (sortBy === 'rating') return b.rating - a.rating;
+      return 0;
+    });
 
   return (
     <motion.div
@@ -96,140 +131,125 @@ const SearchPage = () => {
       initial="initial"
       animate="animate"
       exit="exit"
-      transition={{ duration: 0.3, ease: "easeInOut" }}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
       className={`min-h-screen ${theme.bg} flex flex-col font-poppins pb-24 md:pb-8 transition-colors duration-300`}
     >
-      {/* 1. HEADER (Mobile Only) */}
-      <div className={`md:hidden ${theme.navBg} px-4 pt-5 pb-3 flex items-center gap-3 sticky top-0 z-50 shadow-sm border-b ${theme.border} transition-colors duration-300`}>
-        <button 
-          onClick={() => navigate(-1)} 
-          className={`px-1 rounded-full flex items-center justify-center active:scale-90 transition-transform ${theme.text}`}
-        >
-          <ArrowLeft size={22} />
-        </button>
-        <div className={`flex-1 ${theme.input} rounded-full flex items-center px-4 py-2 border border-transparent focus-within:border-[#4A90E2] transition-colors`}>
-          <input 
-            type="text" 
-            autoFocus
-            placeholder="Search products..." 
-            className={`bg-transparent w-full outline-none text-sm ${theme.text} placeholder-gray-500`}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <button className={`${theme.text} px-1 rounded-full flex items-center justify-center`}>
-          <SlidersHorizontal size={22} />
-        </button>
-      </div>
-
-      {/* 2. TABS (Mobile Only) */}
-      <div className={`md:hidden ${theme.navBg} px-4 py-2.5 flex border-b ${theme.border} shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] relative z-40 transition-colors duration-300`}>
-        <div className="flex gap-2 w-full">
-          <button 
-            onClick={() => setActiveTab('Products')}
-            className={`flex-1 py-1.5 text-sm font-semibold rounded-full transition-all ${
-              activeTab === 'Products' ? 'bg-[#4A90E2] text-white shadow-md shadow-blue-500/20' : `${theme.textSecondary} bg-transparent border ${theme.border}`
-            }`}
-          >
-            Products
-          </button>
-          <button 
-            onClick={() => setActiveTab('Store')}
-            className={`flex-1 py-1.5 text-sm font-semibold rounded-full transition-all ${
-              activeTab === 'Store' ? 'bg-[#4A90E2] text-white shadow-md shadow-blue-500/20' : `${theme.textSecondary} bg-transparent border ${theme.border}`
-            }`}
-          >
-            Store
-          </button>
-        </div>
-      </div>
-
-      {/* Desktop Wrapper */}
-      <div className="flex flex-col md:flex-row md:gap-6 md:p-6 max-w-7xl mx-auto w-full flex-1 md:pt-8 md:px-8 lg:px-16">
-        
-        {/* DESKTOP SIDEBAR (md only) */}
-        <div className={`hidden md:flex flex-col w-[250px] shrink-0 sticky top-24 self-start ${theme.sidebar} rounded-lg p-4`}>
-          <h2 className={`font-bold text-lg mb-4 ${theme.text}`}>Filters</h2>
-          
-          {/* Search Input */}
-          <div className={`${theme.input} rounded-xl flex items-center px-4 py-3 border ${theme.border} focus-within:border-[#4A90E2] transition-colors mb-6 shadow-sm`}>
-            <Search size={18} className={theme.textSecondary} />
-            <input 
-              type="text" 
-              placeholder="Search products..." 
-              className={`bg-transparent w-full outline-none text-sm ml-2 ${theme.text} placeholder-gray-500`}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          {/* Desktop Tabs */}
-          <div className={`flex ${theme.input} p-1 rounded-lg mb-6`}>
-            <button 
-              onClick={() => setActiveTab('Products')}
-              className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all ${
-                activeTab === 'Products' ? `${theme.bgCard} ${theme.text} shadow-sm` : `${theme.textSecondary} hover:text-[#4A90E2]`
-              }`}
+      <div className="max-w-7xl mx-auto w-full flex-1 p-4 md:p-6 md:px-8 lg:px-16">
+        <div className="w-full">
+          {/* Search Header */}
+          <div className="flex items-center gap-3 mb-4">
+            <button
+              onClick={() => navigate(-1)}
+              className={`shrink-0 ${theme.text} active:scale-90 transition-transform`}
             >
-              Products
+              <ArrowLeft size={22} />
             </button>
-            <button 
-              onClick={() => setActiveTab('Store')}
-              className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all ${
-                activeTab === 'Store' ? `${theme.bgCard} ${theme.text} shadow-sm` : `${theme.textSecondary} hover:text-[#4A90E2]`
-              }`}
-            >
-              Store
-            </button>
-          </div>
-
-          {/* Category Filter UI */}
-          <div className="mb-6">
-            <h3 className={`font-semibold text-sm mb-3 ${theme.text}`}>Categories</h3>
-            <ul className={`space-y-2 text-sm ${theme.textSecondary}`}>
-              {categories.map((category) => (
-                <li
-                  key={category}
-                  onClick={() => setActiveCategory(category)}
-                  className={`cursor-pointer transition-colors ${
-                    activeCategory === category ? 'text-[#4A90E2] font-bold' : `${theme.textSecondary} hover:text-[#4A90E2]`
-                  }`}
-                >
-                  {category}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Price Filter UI */}
-          <div className="mb-6">
-            <h3 className={`font-semibold text-sm mb-3 ${theme.text}`}>Price Range</h3>
-            <div className="flex items-center gap-2">
+            <div className={`flex-1 flex items-center gap-3 rounded-xl px-4 py-3 ${theme.input}`}>
+              <Search size={18} className={theme.textSecondary} />
               <input
                 type="text"
-                placeholder="Min"
-                value={minPrice}
-                onChange={(e) => setMinPrice(e.target.value)}
-                className={`w-full ${theme.input} border ${theme.border} ${theme.text} rounded-lg px-2 py-1.5 text-xs outline-none focus:border-[#4A90E2] placeholder-gray-500`}
-              />
-              <span className={theme.textSecondary}>-</span>
-              <input
-                type="text"
-                placeholder="Max"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
-                className={`w-full ${theme.input} border ${theme.border} ${theme.text} rounded-lg px-2 py-1.5 text-xs outline-none focus:border-[#4A90E2] placeholder-gray-500`}
+                autoFocus
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                className={`w-full bg-transparent outline-none text-sm ${theme.text} placeholder-gray-500`}
               />
             </div>
+            <span className="text-sm text-gray-400 whitespace-nowrap">
+              {filteredProducts.length} results
+            </span>
           </div>
-        </div>
 
-        {/* Content Area */}
-        <div className="flex-1 p-4 md:p-0 min-w-0">
+          {/* Filter Chips Bar */}
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-2 mb-4">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 whitespace-nowrap font-medium text-sm transition-colors ${
+                showFilters
+                  ? 'border-blue-500 text-blue-500 bg-blue-500/10'
+                  : `${theme.border} ${theme.text}`
+              }`}
+            >
+              <SlidersHorizontal size={16} />
+              Filters
+              {activeFilters > 0 && (
+                <span className="bg-blue-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                  {activeFilters}
+                </span>
+              )}
+            </button>
+
+            {categoryOptions.map((category) => (
+              <button
+                key={category}
+                onClick={() => setActiveCategory(category)}
+                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap font-medium transition-colors ${
+                  activeCategory === category
+                    ? 'bg-blue-500 text-white'
+                    : `${theme.bgSecondary} ${theme.text} border ${theme.border}`
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+
+            {priceOptions.map((price) => (
+              <button
+                key={price.label}
+                onClick={() => setPriceFilter(price)}
+                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap font-medium transition-colors ${
+                  priceFilter?.label === price.label
+                    ? 'bg-blue-500 text-white'
+                    : `${theme.bgSecondary} ${theme.text} border ${theme.border}`
+                }`}
+              >
+                {price.label}
+              </button>
+            ))}
+
+            <select
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value)}
+              className={`px-4 py-2 rounded-full text-sm border outline-none cursor-pointer ${theme.bgSecondary} ${theme.text} ${theme.border}`}
+            >
+              <option value="">Sort By</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="rating">Top Rated</option>
+            </select>
+
+            {activeFilters > 0 && (
+              <button
+                onClick={clearAllFilters}
+                className="px-4 py-2 rounded-full text-sm text-red-500 border border-red-300 whitespace-nowrap hover:bg-red-50 transition-colors"
+              >
+                <X size={14} className="inline mr-1" />
+                Clear All
+              </button>
+            )}
+          </div>
+
+          {/* Results Tabs */}
+          <div className="flex gap-2 mb-4">
+            {['Products', 'Store'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
+                  activeTab === tab
+                    ? 'bg-blue-500 text-white'
+                    : `${theme.bgSecondary} ${theme.text}`
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
           {loading ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {Array(6).fill(0).map((_, i) => (
-                <ProductCardSkeleton key={i} />
+              {Array(6).fill(0).map((_, index) => (
+                <ProductCardSkeleton key={index} />
               ))}
             </div>
           ) : filteredProducts.length === 0 ? (
@@ -239,7 +259,6 @@ const SearchPage = () => {
             </div>
           ) : (
             <>
-              {/* 3. PRODUCTS GRID */}
               {activeTab === 'Products' && (
                 <motion.div
                   variants={containerVariants}
@@ -247,7 +266,7 @@ const SearchPage = () => {
                   animate="visible"
                   className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
                 >
-                  {filteredProducts.map(product => (
+                  {filteredProducts.map((product) => (
                     <motion.div key={product.id} variants={itemVariants} className="h-full">
                       <ProductCard product={product} />
                     </motion.div>
@@ -255,18 +274,17 @@ const SearchPage = () => {
                 </motion.div>
               )}
 
-              {/* 4. TOKO TAB (LIST VIEW) */}
               {activeTab === 'Store' && (
                 <div className="flex flex-col gap-3">
-                  {filteredProducts.map(product => (
-                    <div 
+                  {filteredProducts.map((product) => (
+                    <div
                       key={product.id}
                       onClick={() => navigate(`/product/${product.id}`)}
                       className={`${theme.card} rounded-xl p-3.5 flex gap-3.5 cursor-pointer active:scale-95 transition-all shadow-sm`}
                     >
-                      <img 
-                        src={product.image} 
-                        alt={product.name} 
+                      <img
+                        src={product.image}
+                        alt={product.name}
                         className={`w-[80px] h-[80px] object-cover rounded-xl ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-100'} border`}
                       />
                       <div className="flex flex-col flex-1 justify-center py-0.5">

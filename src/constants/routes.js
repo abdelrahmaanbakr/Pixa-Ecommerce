@@ -12,5 +12,7 @@ export const ROUTES = {
   MY_ORDERS: "/my-orders",
   MY_ADDRESSES: "/my-addresses",
   PAYMENT_METHODS: "/payment-methods",
+  ABOUT: "/about",
+  CONTACT: "/contact",
   PRODUCT_DETAIL: "/product/:id"
 };

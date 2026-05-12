@@ -9,7 +9,21 @@ import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useTheme } from '../../context/ThemeContext';
 import ProductCard from '../../components/common/ProductCard';
-import { ArrowLeft, Heart, Share2, Star } from 'lucide-react';
+import ReviewCard from '../../components/ui/ReviewCard';
+import AddReviewModal from '../../components/ui/AddReviewModal';
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  Heart,
+  Home,
+  MessageSquare,
+  PenLine,
+  Share2,
+  Star,
+  X
+} from 'lucide-react';
 
 const pageVariants = {
   initial: { opacity: 0, x: 20 },
@@ -28,6 +42,30 @@ const ProductDetailPage = () => {
   const skeletonHighlightColor = isDark ? '#2A2A3E' : '#f5f5f5';
   
   const product = mockData.find(p => p.id === parseInt(id));
+  const [reviews, setReviews] = useState(product?.reviews || []);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showAllReviews, setShowAllReviews] = useState(false);
+  const [filterRating, setFilterRating] = useState(0);
+
+  const avgRating = reviews.length > 0
+    ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
+    : 0;
+
+  const ratingCounts = [5, 4, 3, 2, 1].map(star => ({
+    star,
+    count: reviews.filter(r => r.rating === star).length,
+    percentage: reviews.length > 0
+      ? (reviews.filter(r => r.rating === star).length / reviews.length) * 100
+      : 0
+  }));
+
+  const filteredReviews = filterRating === 0
+    ? reviews
+    : reviews.filter(r => r.rating === filterRating);
+
+  const displayedReviews = showAllReviews
+    ? filteredReviews
+    : filteredReviews.slice(0, 3);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -234,6 +272,28 @@ const ProductDetailPage = () => {
         </div>
       </div>
 
+      <nav className={`px-4 md:px-16 py-3 border-b ${theme.border}
+        ${theme.bgSecondary}`}>
+        <div className="max-w-6xl mx-auto flex items-center gap-1 text-sm">
+          <button onClick={() => navigate('/home')}
+            className="text-blue-500 hover:underline flex
+              items-center gap-1">
+            <Home size={14} />
+            Home
+          </button>
+          <ChevronRight size={14} className={theme.textSecondary} />
+          <button onClick={() => navigate('/products')}
+            className="text-blue-500 hover:underline">
+            Products
+          </button>
+          <ChevronRight size={14} className={theme.textSecondary} />
+          <span className={`${theme.text} font-medium truncate
+            max-w-[200px]`}>
+            {product?.name}
+          </span>
+        </div>
+      </nav>
+
       {/* Desktop Wrapper */}
       <div className="max-w-7xl mx-auto w-full md:px-8 lg:px-16 flex flex-col md:pt-6">
         <div className="flex flex-col md:flex-row md:gap-8 lg:gap-12">
@@ -274,7 +334,7 @@ const ProductDetailPage = () => {
                   {product.rating}
                 </div>
                 <span>•</span>
-                <span>{product.reviews} Reviews</span>
+                <span>{reviews.length} Reviews</span>
                 <span>•</span>
                 <span>800 Sold</span>
               </div>
@@ -326,41 +386,148 @@ const ProductDetailPage = () => {
 
         {/* BOTTOM SECTIONS */}
         {/* 7. REVIEWS SECTION */}
-        <div className={`${theme.bg} md:bg-transparent mt-2 md:mt-12 py-5 pl-5 md:px-0`}>
-          <div className="flex items-center justify-between pr-5 md:pr-0 mb-6">
-            <h2 className={`font-bold text-lg md:text-xl ${theme.text}`}>Customer Reviews</h2>
-            <span className="text-sm font-bold text-[#4A90E2] cursor-pointer hover:underline">See All</span>
+        <section className={`${theme.bg} md:bg-transparent mt-2 md:mt-12 px-4 md:px-0 py-6`}>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className={`text-xl font-bold ${theme.text}`}>
+              Customer Reviews
+            </h2>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowReviewModal(true)}
+              className="flex items-center gap-2 bg-blue-500
+                text-white px-4 py-2 rounded-full text-sm
+                font-medium hover:bg-blue-600 transition-colors">
+              <PenLine size={16} />
+              Write Review
+            </motion.button>
           </div>
-          <div className="flex gap-4 overflow-x-auto md:grid md:grid-cols-2 md:overflow-visible scrollbar-hide pr-5 md:pr-0">
-            {/* Review 1 */}
-            <div className={`w-[260px] md:w-full flex-shrink-0 ${theme.bgCard} border ${theme.border} p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow`}>
-              <div className="flex items-center gap-3 mb-2.5">
-                <img src="https://picsum.photos/seed/user1/30/30" alt="User 1" className={`w-8 h-8 rounded-full border ${theme.border}`} />
-                <div>
-                  <p className={`text-xs font-bold ${theme.text}`}>Andi Saputra</p>
-                  <div className="flex mt-0.5 space-x-0.5">
-                    {[...Array(5)].map((_, i) => <Star key={i} size={10} fill="#FFD700" className="text-yellow-400" />)}
-                  </div>
+
+          <div className={`${theme.card} rounded-2xl p-5
+            mb-6 shadow-sm`}>
+            <div className="flex gap-6 items-center">
+              <div className="text-center shrink-0">
+                <p className={`text-5xl font-bold ${theme.text}`}>
+                  {avgRating}
+                </p>
+                <div className="flex justify-center my-2">
+                  {Array(5).fill(0).map((_, i) => (
+                    <Star key={i} size={16}
+                      fill={i < Math.round(avgRating)
+                        ? '#FBBF24' : 'none'}
+                      className={i < Math.round(avgRating)
+                        ? 'text-yellow-400' : 'text-gray-300'} />
+                  ))}
                 </div>
+                <p className={`text-xs ${theme.textSecondary}`}>
+                  {reviews.length} reviews
+                </p>
               </div>
-              <p className={`text-xs line-clamp-2 leading-relaxed ${theme.textSecondary}`}>Very satisfied with the item, original quality and fast delivery. Highly recommended!</p>
-            </div>
-            {/* Review 2 */}
-            <div className={`w-[260px] md:w-full flex-shrink-0 ${theme.bgCard} border ${theme.border} p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow`}>
-              <div className="flex items-center gap-3 mb-2.5">
-                <img src="https://picsum.photos/seed/user2/30/30" alt="User 2" className={`w-8 h-8 rounded-full border ${theme.border}`} />
-                <div>
-                  <p className={`text-xs font-bold ${theme.text}`}>Budi Santoso</p>
-                  <div className="flex mt-0.5 space-x-0.5">
-                    {[...Array(4)].map((_, i) => <Star key={i} size={10} fill="#FFD700" className="text-yellow-400" />)}
-                    <Star size={10} className="text-gray-300" />
-                  </div>
-                </div>
+
+              <div className="flex-1 space-y-2">
+                {ratingCounts.map(({ star, count, percentage }) => (
+                  <button
+                    key={star}
+                    onClick={() => setFilterRating(
+                      filterRating === star ? 0 : star
+                    )}
+                    className={`w-full flex items-center gap-3
+                      group transition-opacity
+                      ${filterRating > 0 && filterRating !== star
+                        ? 'opacity-40' : 'opacity-100'}`}>
+                    <span className={`text-xs w-3 shrink-0
+                      ${theme.textSecondary}`}>
+                      {star}
+                    </span>
+                    <Star size={12} fill="#FBBF24"
+                      className="text-yellow-400 shrink-0" />
+                    <div className={`flex-1 h-2 rounded-full
+                      ${theme.bgSecondary} overflow-hidden`}>
+                      <motion.div
+                        initial={{ width: 0 }}
+                        whileInView={{
+                          width: `${percentage}%`
+                        }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8, delay: 0.1 }}
+                        className="h-full bg-yellow-400 rounded-full"
+                      />
+                    </div>
+                    <span className={`text-xs w-4 shrink-0
+                      ${theme.textSecondary}`}>
+                      {count}
+                    </span>
+                  </button>
+                ))}
               </div>
-              <p className={`text-xs line-clamp-2 leading-relaxed ${theme.textSecondary}`}>Good item, but packaging is slightly unsafe though contents are intact. Thank you!</p>
             </div>
+
+            {filterRating > 0 && (
+              <div className="mt-3 flex items-center gap-2">
+                <span className={`text-xs ${theme.textSecondary}`}>
+                  Showing {filterRating} star reviews
+                </span>
+                <button
+                  onClick={() => setFilterRating(0)}
+                  className="text-xs text-blue-500
+                    hover:underline flex items-center gap-1">
+                  <X size={12} /> Clear filter
+                </button>
+              </div>
+            )}
           </div>
-        </div>
+
+          {reviews.length === 0 ? (
+            <div className="text-center py-10">
+              <Star size={48} className="text-gray-300 mx-auto mb-3" />
+              <p className={`font-semibold mb-1 ${theme.text}`}>
+                No reviews yet
+              </p>
+              <p className={`text-sm mb-4 ${theme.textSecondary}`}>
+                Be the first to review this product!
+              </p>
+              <button
+                onClick={() => setShowReviewModal(true)}
+                className="bg-blue-500 text-white px-6 py-2
+                  rounded-full text-sm font-medium
+                  hover:bg-blue-600 transition-colors">
+                Write a Review
+              </button>
+            </div>
+          ) : filteredReviews.length === 0 ? (
+            <div className="text-center py-10">
+              <MessageSquare size={48}
+                className="text-gray-300 mx-auto mb-3" />
+              <p className={theme.textSecondary}>
+                No reviews for this rating yet
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-4">
+                {displayedReviews.map(review => (
+                  <ReviewCard key={review.id} review={review} />
+                ))}
+              </div>
+
+              {filteredReviews.length > 3 && (
+                <button
+                  onClick={() => setShowAllReviews(!showAllReviews)}
+                  className={`w-full mt-4 py-3 rounded-xl border-2
+                    border-blue-500 text-blue-500 font-medium text-sm
+                    hover:bg-blue-500 hover:text-white transition-colors
+                    flex items-center justify-center gap-2`}>
+                  {showAllReviews ? (
+                    <>Show Less <ChevronUp size={16} /></>
+                  ) : (
+                    <>Show All {filteredReviews.length} Reviews
+                      <ChevronDown size={16} /></>
+                  )}
+                </button>
+              )}
+            </>
+          )}
+        </section>
 
         {/* 8. SIMILAR PRODUCTS */}
         <div className={`${theme.bg} md:bg-transparent mt-2 md:mt-12 py-5 md:py-8 pl-5 md:px-0`}>
@@ -394,6 +561,17 @@ const ProductDetailPage = () => {
           Buy Now
         </button>
       </div>
+
+      <AddReviewModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        productName={product?.name}
+        onSubmit={(newReview) => {
+          setReviews(prev => [newReview, ...prev]);
+          setShowAllReviews(false);
+          setFilterRating(0);
+        }}
+      />
     </motion.div>
   );
 };

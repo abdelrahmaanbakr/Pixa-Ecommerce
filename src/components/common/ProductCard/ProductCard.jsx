@@ -93,7 +93,7 @@ const ProductCard = ({ product }) => {
         <div className="min-h-[32px] flex items-start gap-1 mb-2">
           <StarRating rating={product.rating} />
           <span className={`text-[11px] font-medium leading-tight ${theme.textSecondary}`}>
-            {product.rating} | {product.reviews} reviews
+            {product.rating} | {product.reviewCount ?? product.reviews?.length ?? product.reviews ?? 0} reviews
           </span>
         </div>
 

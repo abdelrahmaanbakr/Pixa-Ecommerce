@@ -4,7 +4,6 @@ import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useOrders } from '../../context/OrderContext';
-import { useAuth } from '../../context/AuthContext';
 import { Pencil, Package, MapPin, CreditCard, Bell, Globe, Lock, Sun, Moon, LogOut, ChevronRight } from 'lucide-react';
 
 const pageVariants = {
@@ -16,14 +15,18 @@ const pageVariants = {
 const ProfilePage = () => {
   const { isDark, theme, toggleTheme } = useTheme();
   const { getOrders } = useOrders();
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const ordersCount = getOrders().length;
 
+  const user = {
+    name: 'Michael Jordan',
+    email: 'michael@example.com',
+    avatar: 'https://picsum.photos/seed/avatar/100/100'
+  };
+
   const handleLogout = () => {
-    logout();
     toast.success('Logged out successfully');
-    navigate('/login');
+    navigate('/home');
   };
 
   const MenuItem = ({ icon, label, rightContent, onClick, customBorderColor }) => (

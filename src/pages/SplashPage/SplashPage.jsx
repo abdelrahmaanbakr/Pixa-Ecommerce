@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
 import logo from "../../assets/images/Logo.png"
 import onBoardingImage from "../../assets/images/on_boarding_image.png";
 
@@ -15,7 +14,6 @@ const pageVariants = {
 const SplashPage = () => {
   const navigate = useNavigate();
   const { isDark, theme } = useTheme();
-  const { isAuthenticated } = useAuth();
   const mobileBg = isDark
     ? 'bg-[radial-gradient(circle_at_50%_0%,#242447_0%,#16162B_42%,#101020_100%)]'
     : 'bg-[radial-gradient(circle_at_50%_0%,#FFFFFF_0%,#F4F8FF_52%,#EAF3FF_100%)]';
@@ -99,7 +97,7 @@ const SplashPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          onClick={() => navigate(isAuthenticated ? '/home' : '/login')}
+          onClick={() => navigate('/home')}
           className="w-full md:w-auto md:px-16 md:self-start bg-[#4A90E2] text-white py-4 rounded-full font-bold text-lg hover:bg-blue-600 transition-all shadow-[0_4px_15px_rgba(74,144,226,0.3)] active:scale-95"
         >
           Shop Now

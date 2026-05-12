@@ -3,9 +3,6 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { Toaster } from 'react-hot-toast';
 import { AnimatePresence } from 'framer-motion';
 import { ROUTES } from './constants/routes';
-import LoginPage from './pages/LoginPage';
-import SignUpPage from './pages/SignUpPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import SplashPage from './pages/SplashPage';
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
@@ -17,11 +14,13 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import MyOrdersPage from './pages/MyOrdersPage';
 import MyAddressesPage from './pages/MyAddressesPage';
 import PaymentMethodsPage from './pages/PaymentMethodsPage';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
+import CategoriesPage from './pages/CategoriesPage';
+import ProductsPage from './pages/ProductsPage';
 import NotFoundPage from './pages/NotFoundPage';
-import Navbar from './components/common/Navbar';
+import Layout from './components/common/Layout';
 import ScrollToTop from './components/ui/ScrollToTop';
-import ProtectedRoute from './components/common/ProtectedRoute';
-import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { OrderProvider } from './context/OrderContext';
 import { CartProvider } from './context/CartContext';
@@ -29,9 +28,31 @@ import { WishlistProvider } from './context/WishlistContext';
 
 const AppContent = () => {
   const location = useLocation();
-  const publicAuthRoutes = [ROUTES.LOGIN, ROUTES.SIGNUP, ROUTES.FORGOT_PASSWORD];
-  const showNavbar = location.pathname !== ROUTES.SPLASH && !publicAuthRoutes.includes(location.pathname) && location.pathname !== ROUTES.CHECKOUT && !location.pathname.startsWith('/product');
   const { theme } = useTheme();
+  const hideLayout = ['/', '/splash'].includes(location.pathname);
+
+  const pageRoutes = (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path={ROUTES.SPLASH} element={<SplashPage />} />
+        <Route path={ROUTES.HOME} element={<HomePage />} />
+        <Route path={ROUTES.SEARCH} element={<SearchPage />} />
+        <Route path={ROUTES.CART} element={<CartPage />} />
+        <Route path={ROUTES.CHECKOUT} element={<CheckoutPage />} />
+        <Route path={ROUTES.WISHLIST} element={<WishlistPage />} />
+        <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+        <Route path={ROUTES.MY_ORDERS} element={<MyOrdersPage />} />
+        <Route path={ROUTES.MY_ADDRESSES} element={<MyAddressesPage />} />
+        <Route path={ROUTES.PAYMENT_METHODS} element={<PaymentMethodsPage />} />
+        <Route path={ROUTES.PRODUCT_DETAIL} element={<ProductDetailPage />} />
+        <Route path={ROUTES.ABOUT} element={<AboutPage />} />
+        <Route path={ROUTES.CONTACT} element={<ContactPage />} />
+        <Route path="/categories" element={<CategoriesPage />} />
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </AnimatePresence>
+  );
 
   return (
     <div className={`w-full min-h-[100dvh] relative flex flex-col font-poppins ${theme.bg} ${theme.text} transition-colors duration-300`}>
@@ -62,28 +83,15 @@ const AppContent = () => {
           },
         }}
       />
-      {showNavbar && <Navbar />}
-      <main className="flex-1 flex flex-col">
-        <AnimatePresence mode="wait">
-          <Routes location={location} key={location.pathname}>
-            <Route path={ROUTES.SPLASH} element={<SplashPage />} />
-            <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-            <Route path={ROUTES.SIGNUP} element={<SignUpPage />} />
-            <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
-            <Route path={ROUTES.HOME} element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-            <Route path={ROUTES.SEARCH} element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
-            <Route path={ROUTES.CART} element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
-            <Route path={ROUTES.CHECKOUT} element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
-            <Route path={ROUTES.WISHLIST} element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
-            <Route path={ROUTES.PROFILE} element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-            <Route path={ROUTES.MY_ORDERS} element={<ProtectedRoute><MyOrdersPage /></ProtectedRoute>} />
-            <Route path={ROUTES.MY_ADDRESSES} element={<ProtectedRoute><MyAddressesPage /></ProtectedRoute>} />
-            <Route path={ROUTES.PAYMENT_METHODS} element={<ProtectedRoute><PaymentMethodsPage /></ProtectedRoute>} />
-            <Route path={ROUTES.PRODUCT_DETAIL} element={<ProtectedRoute><ProductDetailPage /></ProtectedRoute>} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </AnimatePresence>
-      </main>
+      {!hideLayout ? (
+        <Layout>
+          {pageRoutes}
+        </Layout>
+      ) : (
+        <main className="flex-1 flex flex-col">
+          {pageRoutes}
+        </main>
+      )}
       <ScrollToTop />
     </div>
   );
@@ -91,19 +99,17 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <OrderProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <Router>
-                <AppContent />
-              </Router>
-            </WishlistProvider>
-          </CartProvider>
-        </OrderProvider>
-      </ThemeProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <OrderProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <Router>
+              <AppContent />
+            </Router>
+          </WishlistProvider>
+        </CartProvider>
+      </OrderProvider>
+    </ThemeProvider>
   );
 };
 

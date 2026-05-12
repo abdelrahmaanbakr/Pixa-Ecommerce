@@ -93,7 +93,6 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { cart } = useCart();
   const { isDark, theme } = useTheme();
-  const [activeCategory, setActiveCategory] = useState('All');
   const [loading, setLoading] = useState(true);
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const skeletonBaseColor = isDark ? '#1A1A2E' : '#e0e0e0';
@@ -106,12 +105,6 @@ const HomePage = () => {
 
     return () => clearTimeout(timer);
   }, []);
-
-  // TODO: Replace with API call when backend is ready
-  const categories = ['All', 'Electronics', 'Sports', 'Fashion'];
-  const filteredProducts = activeCategory === 'All'
-    ? mockData
-    : mockData.filter((product) => product.category === activeCategory);
 
   return (
     <motion.div
@@ -167,43 +160,10 @@ const HomePage = () => {
       </div>
 
       {/* Desktop Layout Wrapper */}
-      <div className="flex flex-col lg:flex-row lg:gap-6 lg:p-6 max-w-7xl mx-auto w-full lg:px-8 xl:px-16">
-
-        {/* DESKTOP SIDEBAR */}
-        <div className={`hidden lg:block w-[250px] shrink-0 sticky top-24 self-start mt-4 ${theme.sidebar} p-4 rounded-xl ${isDark ? 'border border-gray-800' : ''}`}>
-          <h2 className={`text-xl font-bold mb-6 ${theme.text}`}>Categories</h2>
-          <ul className="space-y-4">
-            {categories.map((cat) => (
-              <li
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`font-semibold cursor-pointer transition-colors ${
-                  activeCategory === cat
-                    ? 'text-[#4A90E2] font-bold'
-                    : `${theme.textSecondary} hover:text-[#4A90E2]`
-                }`}
-              >
-                {cat}
-              </li>
-            ))}
-          </ul>
-        </div>
+      <div className="max-w-7xl mx-auto w-full lg:p-6 lg:px-8 xl:px-16">
 
         {/* Main Content Area */}
-        <div className="flex-1 w-full flex flex-col pt-0 lg:pt-8 min-w-0">
-
-          {/* DESKTOP SEARCH BAR */}
-          <div className="hidden md:flex px-5 lg:px-0 mb-6 mt-4 lg:mt-0">
-            <div
-              onClick={() => navigate('/search')}
-              className={`w-full ${theme.input} rounded-full py-4 px-6 flex items-center shadow-sm border border-transparent cursor-text hover:border-[#4A90E2] transition-colors`}
-            >
-              <Search size={22} className={`${theme.textSecondary} mr-3`} />
-              <span className={`text-[15px] ${theme.textSecondary}`}>
-                Search clothes, shoes, bags...
-              </span>
-            </div>
-          </div>
+        <div className="w-full flex flex-col pt-0 lg:pt-8 min-w-0">
 
           {/* BANNER SLIDER */}
           {loading ? (
@@ -292,7 +252,7 @@ const HomePage = () => {
               animate="visible"
               className="px-5 lg:px-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 content-start"
             >
-              {filteredProducts.map((product) => (
+              {mockData.map((product) => (
                 <motion.div key={product.id} variants={itemVariants} className="h-full">
                   <ProductCard product={product} />
                 </motion.div>
