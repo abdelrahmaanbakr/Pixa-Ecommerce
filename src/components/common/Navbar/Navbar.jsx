@@ -12,25 +12,33 @@ import {
   Sun,
   Moon,
   Home,
-  Tag,
-  Star,
   Info,
   Phone,
   LayoutGrid,
-  ChevronDown,
-  ChevronRight,
-  Laptop,
-  Shirt,
-  Dumbbell,
   ShoppingBag,
-  Watch,
-  Footprints,
-  Sparkles,
-  Compass,
   User,
   X
 } from 'lucide-react';
 import logo from '../../../assets/images/Logo.png';
+
+const desktopLinks = [
+  { label: 'Home', path: '/home' },
+  { label: 'Products', path: '/products' },
+  { label: 'Categories', path: '/categories' },
+  { label: 'About', path: '/about' },
+  { label: 'Contact', path: '/contact' },
+];
+
+const mobileLinks = [
+  { label: 'Home', path: '/home', icon: Home },
+  { label: 'Products', path: '/products', icon: ShoppingBag },
+  { label: 'Categories', path: '/categories', icon: LayoutGrid },
+  { label: 'About', path: '/about', icon: Info },
+  { label: 'Contact', path: '/contact', icon: Phone },
+  { label: 'Cart', path: '/cart', icon: ShoppingCart },
+  { label: 'Wishlist', path: '/wishlist', icon: Heart },
+  { label: 'Profile', path: '/profile', icon: User },
+];
 
 const Navbar = ({ placement = 'all' }) => {
   const location = useLocation();
@@ -64,23 +72,27 @@ const Navbar = ({ placement = 'all' }) => {
 
               {/* Nav Links */}
               <nav className="flex items-center gap-6">
-                {[
-                  { label: 'Home', path: '/home' },
-                  { label: 'Products', path: '/products' },
-                  { label: 'Categories', path: '/categories' },
-                  { label: 'About', path: '/about' },
-                  { label: 'Contact', path: '/contact' },
-                ].map(link => (
+                {desktopLinks.map(link => {
+                  const isActive = location.pathname === link.path;
+                  return (
                   <button key={link.label}
                     onClick={() => navigate(link.path)}
-                    className={`text-sm font-medium transition-colors
-                      hover:text-blue-500
-                      ${location.pathname === link.path
+                    className={`relative py-2 text-sm font-medium transition-colors
+                      hover:text-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-4 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#1A1A2E] rounded-sm
+                      ${isActive
                         ? 'text-blue-500'
                         : theme.text}`}>
                     {link.label}
+                    {isActive && (
+                      <motion.span
+                        layoutId="desktop-nav-indicator"
+                        className="absolute inset-x-1 -bottom-0.5 h-0.5 rounded-full bg-blue-500"
+                        transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                      />
+                    )}
                   </button>
-                ))}
+                  );
+                })}
               </nav>
             </div>
 
@@ -117,7 +129,8 @@ const Navbar = ({ placement = 'all' }) => {
               {/* Theme Toggle */}
               <button onClick={toggleTheme}
                 className={`p-2 rounded-full transition-colors
-                  hover:bg-gray-100/10`}>
+                  hover:bg-gray-100/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400`}
+                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
                 {isDark 
                   ? <Sun size={20} className="text-yellow-400" />
                   : <Moon size={20} className="text-gray-500" />}
@@ -125,7 +138,8 @@ const Navbar = ({ placement = 'all' }) => {
 
               {/* Wishlist */}
               <button onClick={() => navigate('/wishlist')}
-                className="relative p-1">
+                className="relative p-1 rounded-full transition-transform hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                aria-label="Open wishlist">
                 <Heart size={22} className={theme.text} />
                 {wishlistCount > 0 && (
                   <span className="absolute -top-1 -right-1 
@@ -139,7 +153,8 @@ const Navbar = ({ placement = 'all' }) => {
 
               {/* Cart */}
               <button onClick={() => navigate('/cart')}
-                className="relative p-1">
+                className="relative p-1 rounded-full transition-transform hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                aria-label="Open cart">
                 <ShoppingCart size={22} className={theme.text} />
                 {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1
@@ -152,7 +167,10 @@ const Navbar = ({ placement = 'all' }) => {
               </button>
 
               {/* Profile */}
-              <button onClick={() => navigate('/profile')}>
+              <button
+                onClick={() => navigate('/profile')}
+                className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                aria-label="Open profile">
                 <img
                   src="https://picsum.photos/seed/avatar/32/32"
                   alt="profile"
@@ -169,7 +187,8 @@ const Navbar = ({ placement = 'all' }) => {
             ${theme.navBg} border-b ${theme.border} shadow-sm`}>
             {/* LEFT: Hamburger */}
             <button onClick={() => setMenuOpen(true)}
-              className="p-2">
+              className="p-2 rounded-full active:scale-95 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+              aria-label="Open navigation menu">
               <Menu size={24} className={theme.text} />
             </button>
 
@@ -180,7 +199,8 @@ const Navbar = ({ placement = 'all' }) => {
             {/* RIGHT: Cart + Wishlist */}
             <div className="flex items-center gap-1">
               <button onClick={() => navigate('/wishlist')}
-                className="relative p-2">
+                className="relative p-2 rounded-full active:scale-95 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                aria-label="Open wishlist">
                 <Heart size={22} className={theme.text} />
                 {wishlistCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-4 h-4
@@ -191,7 +211,8 @@ const Navbar = ({ placement = 'all' }) => {
                 )}
               </button>
               <button onClick={() => navigate('/cart')}
-                className="relative p-2">
+                className="relative p-2 rounded-full active:scale-95 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                aria-label="Open cart">
                 <ShoppingCart size={22} className={theme.text} />
                 {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-4 h-4
@@ -230,24 +251,21 @@ const Navbar = ({ placement = 'all' }) => {
                   <div className={`flex items-center justify-between
                     p-4 border-b ${theme.border}`}>
                     <img src={logo} alt="logo" className="h-7 w-auto" />
-                    <button onClick={() => setMenuOpen(false)}>
+                    <button
+                      onClick={() => setMenuOpen(false)}
+                      className="rounded-full p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                      aria-label="Close navigation menu">
                       <X size={24} className={theme.text} />
                     </button>
                   </div>
 
                   {/* Links */}
                   <div className="flex-1 py-4 overflow-y-auto">
-                    {[
-                      { label: 'Home', path: '/home', icon: Home },
-                      { label: 'Products', path: '/products', icon: ShoppingBag },
-                      { label: 'Categories', path: '/categories', icon: LayoutGrid },
-                      { label: 'About', path: '/about', icon: Info },
-                      { label: 'Contact', path: '/contact', icon: Phone },
-                      { label: 'Cart', path: '/cart', icon: ShoppingCart },
-                      { label: 'Wishlist', path: '/wishlist', icon: Heart },
-                      { label: 'Profile', path: '/profile', icon: User },
-                    ].map(({ label, path, icon: Icon }) => (
-                      <button key={label}
+                    {mobileLinks.map(({ label, path, icon: Icon }, index) => (
+                      <motion.button key={label}
+                        initial={{ opacity: 0, x: 24 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.035, duration: 0.22 }}
                         onClick={() => {
                           navigate(path)
                           setMenuOpen(false)
@@ -266,7 +284,7 @@ const Navbar = ({ placement = 'all' }) => {
                             : theme.textSecondary
                         } />
                         {label}
-                      </button>
+                      </motion.button>
                     ))}
                   </div>
 
@@ -276,7 +294,7 @@ const Navbar = ({ placement = 'all' }) => {
                       onClick={toggleTheme}
                       className={`w-full flex items-center
                         justify-between px-4 py-3 rounded-xl
-                        ${theme.bgSecondary}`}>
+                        ${theme.bgSecondary} focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400`}>
                       <span className={`text-sm font-medium ${theme.text}`}>
                         {isDark ? 'Dark Mode' : 'Light Mode'}
                       </span>

@@ -11,6 +11,7 @@ import { useTheme } from '../../context/ThemeContext';
 import ProductCard from '../../components/common/ProductCard';
 import ReviewCard from '../../components/ui/ReviewCard';
 import AddReviewModal from '../../components/ui/AddReviewModal';
+import { pageTransition, subtleSectionReveal } from '../../utils/animations';
 import {
   ArrowLeft,
   ChevronDown,
@@ -24,12 +25,6 @@ import {
   Star,
   X
 } from 'lucide-react';
-
-const pageVariants = {
-  initial: { opacity: 0, x: 20 },
-  animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -20 }
-};
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -81,7 +76,7 @@ const ProductDetailPage = () => {
       toast.error('Removed from Favorites!');
     } else {
       toggleWishlist(product);
-      toast.success('Added to Favorites! ❤️');
+      toast.success('Added to Favorites!');
     }
   };
 
@@ -99,11 +94,11 @@ const ProductDetailPage = () => {
   if (!product) {
     return (
       <motion.div
-        variants={pageVariants}
+        variants={pageTransition}
         initial="initial"
         animate="animate"
         exit="exit"
-        transition={{ duration: 0.3, ease: "easeInOut" }}
+        transition={pageTransition.transition}
         className={`flex flex-col h-full ${theme.bg} font-poppins transition-colors duration-300`}
       >
         {/* 1. HEADER FOR ERROR STATE */}
@@ -123,11 +118,11 @@ const ProductDetailPage = () => {
   if (loading) {
     return (
       <motion.div
-        variants={pageVariants}
+        variants={pageTransition}
         initial="initial"
         animate="animate"
         exit="exit"
-        transition={{ duration: 0.3, ease: "easeInOut" }}
+        transition={pageTransition.transition}
         className={`relative font-poppins ${theme.bg} flex flex-col min-h-screen pb-20 md:pb-8 transition-colors duration-300`}
       >
         {/* 1. HEADER (Mobile Only) */}
@@ -249,11 +244,11 @@ const ProductDetailPage = () => {
 
   return (
     <motion.div
-      variants={pageVariants}
+      variants={pageTransition}
       initial="initial"
       animate="animate"
       exit="exit"
-      transition={{ duration: 0.3, ease: "easeInOut" }}
+      transition={pageTransition.transition}
       className={`relative font-poppins ${theme.bg} flex flex-col min-h-screen pb-20 md:pb-8 transition-colors duration-300`}
     >
       {/* 1. HEADER (Mobile Only) */}
@@ -301,9 +296,11 @@ const ProductDetailPage = () => {
           {/* LEFT COLUMN (Image & Thumbnails) */}
           <div className={`w-full md:w-[40%] ${theme.bg} md:bg-transparent md:rounded-3xl md:p-4 h-fit md:sticky top-24 border-b border-transparent`}>
             {/* 2. PRODUCT IMAGE */}
-            <img 
+            <motion.img
               src={product.image} 
               alt={product.name} 
+              whileHover={{ scale: 1.025 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
               className={`w-full h-[280px] md:h-[400px] object-cover md:rounded-2xl ${isDark ? 'bg-[#1A1A2E]' : 'bg-gray-100'}`}
             />
 
@@ -386,7 +383,12 @@ const ProductDetailPage = () => {
 
         {/* BOTTOM SECTIONS */}
         {/* 7. REVIEWS SECTION */}
-        <section className={`${theme.bg} md:bg-transparent mt-2 md:mt-12 px-4 md:px-0 py-6`}>
+        <motion.section
+          variants={subtleSectionReveal}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-80px' }}
+          className={`${theme.bg} md:bg-transparent mt-2 md:mt-12 px-4 md:px-0 py-6`}>
           <div className="flex items-center justify-between mb-6">
             <h2 className={`text-xl font-bold ${theme.text}`}>
               Customer Reviews
@@ -527,10 +529,15 @@ const ProductDetailPage = () => {
               )}
             </>
           )}
-        </section>
+        </motion.section>
 
         {/* 8. SIMILAR PRODUCTS */}
-        <div className={`${theme.bg} md:bg-transparent mt-2 md:mt-12 py-5 md:py-8 pl-5 md:px-0`}>
+        <motion.div
+          variants={subtleSectionReveal}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-80px' }}
+          className={`${theme.bg} md:bg-transparent mt-2 md:mt-12 py-5 md:py-8 pl-5 md:px-0`}>
           <div className="flex items-center justify-between pr-5 md:pr-0 mb-6">
             <h2 className={`font-bold text-lg md:text-xl ${theme.text}`}>Similar Products</h2>
             <span className="text-sm font-bold text-[#4A90E2] cursor-pointer hover:underline">See All</span>
@@ -542,7 +549,7 @@ const ProductDetailPage = () => {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* spacer to ensure content doesn't get hidden behind the sticky bottom bar on scroll end */}

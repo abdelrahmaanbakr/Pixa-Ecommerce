@@ -1,25 +1,10 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { X, PackageSearch } from 'lucide-react';
 import { mockData } from '../../data/mockData';
 import ProductCard from '../../components/common/ProductCard';
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08 }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, scale: 0.9, y: 20 },
-  visible: {
-    opacity: 1, scale: 1, y: 0,
-    transition: { type: 'spring', stiffness: 200 }
-  }
-};
+import { revealContainer, revealItem } from '../../utils/animations';
 
 const ProductsPage = () => {
   const { theme } = useTheme();
@@ -65,7 +50,8 @@ const ProductsPage = () => {
             onChange={(e) => setSortBy(e.target.value)}
             className={`px-4 py-2 rounded-full text-sm
               border outline-none cursor-pointer shrink-0
-              ${theme.bgSecondary} ${theme.text} ${theme.border}`}>
+              ${theme.bgSecondary} ${theme.text} ${theme.border}
+              focus:ring-2 focus:ring-blue-400`}>
             <option value="">Sort By</option>
             <option value="price-asc">Price: Low to High</option>
             <option value="price-desc">Price: High to Low</option>
@@ -79,7 +65,9 @@ const ProductsPage = () => {
               onClick={() => setActiveCategory(cat)}
               className={`px-4 py-2 rounded-full text-sm
                 font-medium whitespace-nowrap shrink-0
-                transition-colors border
+                transition-all border hover:-translate-y-0.5
+                focus:outline-none focus-visible:ring-2
+                focus-visible:ring-blue-400
                 ${activeCategory === cat
                   ? 'bg-blue-500 text-white border-blue-500'
                   : `${theme.bgSecondary} ${theme.text}
@@ -133,18 +121,22 @@ const ProductsPage = () => {
             </button>
           </div>
         ) : (
+          <AnimatePresence mode="popLayout">
           <motion.div
-            variants={containerVariants}
+            key={`${activeCategory}-${sortBy}`}
+            variants={revealContainer}
             initial="hidden"
             animate="visible"
+            exit={{ opacity: 0, y: 8 }}
             className="grid grid-cols-2 md:grid-cols-3
               lg:grid-cols-4 gap-4 md:gap-6">
             {filteredProducts.map((product) => (
-              <motion.div key={product.id} variants={itemVariants}>
+              <motion.div key={product.id} layout variants={revealItem}>
                 <ProductCard product={product} />
               </motion.div>
             ))}
           </motion.div>
+          </AnimatePresence>
         )}
       </main>
     </div>

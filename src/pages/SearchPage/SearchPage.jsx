@@ -1,47 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { mockData } from '../../data/mockData';
 import { formatPrice } from '../../utils/formatPrice';
 import { useTheme } from '../../context/ThemeContext';
 import ProductCard from '../../components/common/ProductCard';
 import ProductCardSkeleton from '../../components/ui/ProductCardSkeleton';
+import { pageTransition, revealContainer, revealItem } from '../../utils/animations';
 import { ArrowLeft, SlidersHorizontal, Search, Star, SearchX, X } from 'lucide-react';
-
-const pageVariants = {
-  initial: { opacity: 0, x: 20 },
-  animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -20 }
-};
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: {
-    opacity: 0,
-    scale: 0.8,
-    y: 20
-  },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    y: 0,
-    transition: {
-      type: 'spring',
-      stiffness: 200,
-      damping: 20
-    }
-  }
-};
 
 const categoryOptions = ['All', 'Electronics', 'Fashion', 'Sports', 'Bags', 'Accessories'];
 const priceOptions = [
@@ -127,11 +93,11 @@ const SearchPage = () => {
 
   return (
     <motion.div
-      variants={pageVariants}
+      variants={pageTransition}
       initial="initial"
       animate="animate"
       exit="exit"
-      transition={{ duration: 0.3, ease: 'easeInOut' }}
+      transition={pageTransition.transition}
       className={`min-h-screen ${theme.bg} flex flex-col font-poppins pb-24 md:pb-8 transition-colors duration-300`}
     >
       <div className="max-w-7xl mx-auto w-full flex-1 p-4 md:p-6 md:px-8 lg:px-16">
@@ -140,7 +106,8 @@ const SearchPage = () => {
           <div className="flex items-center gap-3 mb-4">
             <button
               onClick={() => navigate(-1)}
-              className={`shrink-0 ${theme.text} active:scale-90 transition-transform`}
+                className={`shrink-0 ${theme.text} active:scale-90 transition-transform rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400`}
+                aria-label="Go back"
             >
               <ArrowLeft size={22} />
             </button>
@@ -167,7 +134,7 @@ const SearchPage = () => {
               className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 whitespace-nowrap font-medium text-sm transition-colors ${
                 showFilters
                   ? 'border-blue-500 text-blue-500 bg-blue-500/10'
-                  : `${theme.border} ${theme.text}`
+                  : `${theme.border} ${theme.text} hover:border-blue-300`
               }`}
             >
               <SlidersHorizontal size={16} />
@@ -186,7 +153,7 @@ const SearchPage = () => {
                 className={`px-4 py-2 rounded-full text-sm whitespace-nowrap font-medium transition-colors ${
                   activeCategory === category
                     ? 'bg-blue-500 text-white'
-                    : `${theme.bgSecondary} ${theme.text} border ${theme.border}`
+                    : `${theme.bgSecondary} ${theme.text} border ${theme.border} hover:border-blue-300`
                 }`}
               >
                 {category}
@@ -200,7 +167,7 @@ const SearchPage = () => {
                 className={`px-4 py-2 rounded-full text-sm whitespace-nowrap font-medium transition-colors ${
                   priceFilter?.label === price.label
                     ? 'bg-blue-500 text-white'
-                    : `${theme.bgSecondary} ${theme.text} border ${theme.border}`
+                    : `${theme.bgSecondary} ${theme.text} border ${theme.border} hover:border-blue-300`
                 }`}
               >
                 {price.label}
@@ -260,18 +227,22 @@ const SearchPage = () => {
           ) : (
             <>
               {activeTab === 'Products' && (
-                <motion.div
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                  className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-                >
-                  {filteredProducts.map((product) => (
-                    <motion.div key={product.id} variants={itemVariants} className="h-full">
-                      <ProductCard product={product} />
-                    </motion.div>
-                  ))}
-                </motion.div>
+                <AnimatePresence mode="popLayout">
+                  <motion.div
+                    key={`${searchQuery}-${activeCategory}-${priceFilter?.label || 'all'}-${sortBy}`}
+                    variants={revealContainer}
+                    initial="hidden"
+                    animate="visible"
+                    exit={{ opacity: 0, y: 8 }}
+                    className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                  >
+                    {filteredProducts.map((product) => (
+                      <motion.div key={product.id} layout variants={revealItem} className="h-full">
+                        <ProductCard product={product} />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                </AnimatePresence>
               )}
 
               {activeTab === 'Store' && (
@@ -280,7 +251,7 @@ const SearchPage = () => {
                     <div
                       key={product.id}
                       onClick={() => navigate(`/product/${product.id}`)}
-                      className={`${theme.card} rounded-xl p-3.5 flex gap-3.5 cursor-pointer active:scale-95 transition-all shadow-sm`}
+                    className={`${theme.card} rounded-xl p-3.5 flex gap-3.5 cursor-pointer active:scale-95 transition-all shadow-sm hover:shadow-lg hover:-translate-y-0.5`}
                     >
                       <img
                         src={product.image}

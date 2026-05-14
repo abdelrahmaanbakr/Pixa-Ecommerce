@@ -246,5 +246,11 @@ export const mockData = [
   withReviewStats({ id: 3, name: "Smart Watch series 7", price: 4200000, image: "https://picsum.photos/seed/watch1/200/200", category: "Electronics" }, productReviews.watch),
   withReviewStats({ id: 4, name: "Leather Backpack", price: 550000, image: "https://picsum.photos/seed/bag1/200/200", category: "Fashion" }, productReviews.backpack),
   withReviewStats({ id: 5, name: "Mechanical Keyboard", price: 1200000, image: "https://picsum.photos/seed/keyboard1/200/200", category: "Electronics" }, productReviews.keyboard),
-  withReviewStats({ id: 6, name: "Polarized Sunglasses", price: 300000, image: "https://picsum.photos/seed/glasses1/200/200", category: "Fashion" }, productReviews.sunglasses)
+  withReviewStats({ id: 6, name: "Polarized Sunglasses", price: 300000, image: "https://picsum.photos/seed/glasses1/200/200", category: "Fashion" }, productReviews.sunglasses),
+  withReviewStats({ id: 7, name: "Wireless Gaming Mouse", price: 680000, image: "https://picsum.photos/seed/gamingmouse1/200/200", category: "Electronics" }, productReviews.keyboard),
+  withReviewStats({ id: 8, name: "Classic Denim Jacket", price: 720000, image: "https://picsum.photos/seed/denimjacket1/200/200", category: "Fashion" }, productReviews.sunglasses),
+  withReviewStats({ id: 9, name: "Training Duffel Bag", price: 460000, image: "https://picsum.photos/seed/duffelbag1/200/200", category: "Bags" }, productReviews.backpack),
+  withReviewStats({ id: 10, name: "Trail Running Sneakers", price: 980000, image: "https://picsum.photos/seed/trailshoes1/200/200", category: "Shoes" }, productReviews.shoes),
+  withReviewStats({ id: 11, name: "Fitness Resistance Kit", price: 240000, image: "https://picsum.photos/seed/resistancekit1/200/200", category: "Sports" }, productReviews.shoes),
+  withReviewStats({ id: 12, name: "Minimal Leather Wallet", price: 210000, image: "https://picsum.photos/seed/wallet1/200/200", category: "Accessories" }, productReviews.backpack)
 ];

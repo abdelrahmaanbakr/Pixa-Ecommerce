@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Skeleton from 'react-loading-skeleton';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
@@ -11,42 +13,10 @@ import { useCart } from '../../context/CartContext';
 import { useTheme } from '../../context/ThemeContext';
 import ProductCard from '../../components/common/ProductCard';
 import ProductCardSkeleton from '../../components/ui/ProductCardSkeleton';
+import { pageTransition, revealContainer, revealItem } from '../../utils/animations';
 import { Bell, ShoppingCart, Search } from 'lucide-react';
 
-const pageVariants = {
-  initial: { opacity: 0, x: 20 },
-  animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -20 }
-};
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { 
-    opacity: 0, 
-    scale: 0.8,
-    y: 20
-  },
-  visible: { 
-    opacity: 1, 
-    scale: 1,
-    y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 200,
-      damping: 20
-    }
-  }
-};
+gsap.registerPlugin(ScrollTrigger);
 
 // TODO: Replace banners with API data when backend is ready
 // GET /api/banners
@@ -94,6 +64,8 @@ const HomePage = () => {
   const { cart } = useCart();
   const { isDark, theme } = useTheme();
   const [loading, setLoading] = useState(true);
+  const heroRef = useRef(null);
+  const shouldReduceMotion = useReducedMotion();
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const skeletonBaseColor = isDark ? '#1A1A2E' : '#e0e0e0';
   const skeletonHighlightColor = isDark ? '#2A2A3E' : '#f5f5f5';
@@ -106,13 +78,47 @@ const HomePage = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    if (loading || shouldReduceMotion || !heroRef.current) return undefined;
+
+    const context = gsap.context(() => {
+      gsap.fromTo(
+        '.home-hero-card',
+        { y: 18, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.7,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: heroRef.current,
+            start: 'top 85%'
+          }
+        }
+      );
+
+      gsap.to('.home-hero-image', {
+        yPercent: -8,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: heroRef.current,
+          start: 'top bottom',
+          end: 'bottom top',
+          scrub: 0.6
+        }
+      });
+    }, heroRef);
+
+    return () => context.revert();
+  }, [loading, shouldReduceMotion]);
+
   return (
     <motion.div
-      variants={pageVariants}
+      variants={pageTransition}
       initial="initial"
       animate="animate"
       exit="exit"
-      transition={{ duration: 0.3, ease: "easeInOut" }}
+      transition={pageTransition.transition}
       className={`min-h-screen ${theme.bg} pb-20 md:pb-8 font-poppins transition-colors duration-300`}
     >
       {/* 1. HEADER SECTION (Mobile Only) */}
@@ -176,7 +182,7 @@ const HomePage = () => {
               />
             </div>
           ) : (
-            <div className="px-5 lg:px-0 mb-6 mt-4 relative z-10">
+            <div ref={heroRef} className="px-5 lg:px-0 mb-6 mt-4 relative z-10">
             <Swiper
               modules={[Autoplay, Pagination]}
               autoplay={{ delay: 3000, disableOnInteraction: false }}
@@ -186,7 +192,7 @@ const HomePage = () => {
             >
               {banners.map((banner) => (
                 <SwiperSlide key={banner.id}>
-                  <div className={`bg-gradient-to-r ${banner.bg} rounded-2xl h-44 flex items-center justify-between overflow-hidden relative`}>
+                  <div className={`home-hero-card bg-gradient-to-r ${banner.bg} rounded-2xl h-44 flex items-center justify-between overflow-hidden relative shadow-lg shadow-blue-500/10`}>
 
                     {/* Left: Text */}
                     <div className="p-5 flex-1 z-10">
@@ -201,7 +207,7 @@ const HomePage = () => {
                       </p>
                       <button
                         onClick={() => navigate('/search')}
-                        className="bg-white text-blue-600 text-xs font-bold px-4 py-2 rounded-full hover:opacity-90 transition-all duration-200"
+                        className="bg-white text-blue-600 text-xs font-bold px-4 py-2 rounded-full hover:-translate-y-0.5 hover:shadow-lg active:scale-95 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                       >
                         {banner.btnText} →
                       </button>
@@ -212,17 +218,14 @@ const HomePage = () => {
                       <img
                         src={banner.image}
                         alt={banner.title}
-                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        className="home-hero-image w-full h-[115%] object-cover"
                         onError={(e) => {
                           e.target.src = "https://picsum.photos/seed/fallback/300/200";
                         }}
                       />
                       <div className={`absolute inset-0 bg-gradient-to-r ${banner.bg} opacity-20`} />
                     </div>
-
-                    {/* Decorations */}
-                    <div className="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-white/10" />
-                    <div className="absolute right-32 -top-6 w-20 h-20 rounded-full bg-white/10" />
                   </div>
                 </SwiperSlide>
               ))}
@@ -233,7 +236,10 @@ const HomePage = () => {
           {/* SECTION TITLE */}
           <div className="px-5 lg:px-0 flex justify-between items-end mb-4">
             <h3 className={`text-lg font-bold ${theme.text}`}>Latest Products</h3>
-            <button className="text-sm font-semibold text-[#4A90E2] hover:text-blue-600 transition-colors">
+            <button
+              onClick={() => navigate('/products')}
+              className="text-sm font-semibold text-[#4A90E2] hover:text-blue-600 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
+            >
               See All
             </button>
           </div>
@@ -247,13 +253,13 @@ const HomePage = () => {
             </div>
           ) : (
             <motion.div
-              variants={containerVariants}
+              variants={revealContainer}
               initial="hidden"
               animate="visible"
               className="px-5 lg:px-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 content-start"
             >
               {mockData.map((product) => (
-                <motion.div key={product.id} variants={itemVariants} className="h-full">
+                <motion.div key={product.id} variants={revealItem} className="h-full">
                   <ProductCard product={product} />
                 </motion.div>
               ))}

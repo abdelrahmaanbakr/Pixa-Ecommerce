@@ -1,5 +1,8 @@
-import { motion } from 'framer-motion';
+import { useEffect, useRef } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useTheme } from '../../context/ThemeContext';
 import {
   Laptop,
@@ -12,6 +15,9 @@ import {
 } from 'lucide-react';
 import { mockData } from '../../data/mockData';
 import ProductCard from '../../components/common/ProductCard';
+import { subtleSectionReveal } from '../../utils/animations';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const categories = [
   {
@@ -79,6 +85,32 @@ const categories = [
 const CategoriesPage = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const categoryGridRef = useRef(null);
+  const shouldReduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (shouldReduceMotion || !categoryGridRef.current) return undefined;
+
+    const context = gsap.context(() => {
+      gsap.fromTo(
+        '.category-card',
+        { autoAlpha: 0, y: 28 },
+        {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.55,
+          ease: 'power3.out',
+          stagger: 0.08,
+          scrollTrigger: {
+            trigger: categoryGridRef.current,
+            start: 'top 82%'
+          }
+        }
+      );
+    }, categoryGridRef);
+
+    return () => context.revert();
+  }, [shouldReduceMotion]);
 
   return (
     <div className={`min-h-screen font-poppins ${theme.bg}`}>
@@ -98,11 +130,11 @@ const CategoriesPage = () => {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2
+      <div ref={categoryGridRef} className="grid grid-cols-1 md:grid-cols-2
         lg:grid-cols-3 gap-6 max-w-6xl mx-auto
         px-6 md:px-16 py-12">
         {categories.map((cat, index) => (
-          <motion.div
+          <motion.button
             key={cat.label}
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -110,11 +142,12 @@ const CategoriesPage = () => {
             transition={{ delay: index * 0.1 }}
             whileHover={{ y: -8 }}
             onClick={() => navigate(`/search?category=${cat.label}`)}
-            className={`${theme.card} rounded-2xl overflow-hidden
+            className={`category-card ${theme.card} rounded-2xl overflow-hidden text-left
               cursor-pointer shadow-sm hover:shadow-xl
-              transition-all duration-300 group`}>
+              transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400`}>
             <div className="relative h-48 overflow-hidden">
               <img src={cat.image} alt={cat.label}
+                loading="lazy"
                 className="w-full h-full object-cover
                   transition-transform duration-500
                   group-hover:scale-110"
@@ -150,7 +183,7 @@ const CategoriesPage = () => {
                 <ChevronRight size={16} />
               </div>
             </div>
-          </motion.div>
+          </motion.button>
         ))}
       </div>
 
@@ -160,7 +193,12 @@ const CategoriesPage = () => {
         if (catProducts.length === 0) return null;
 
         return (
-          <section key={cat.label}
+          <motion.section
+            key={cat.label}
+            variants={subtleSectionReveal}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-80px' }}
             className="py-10 px-6 md:px-16 max-w-6xl mx-auto">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-3">
@@ -184,7 +222,7 @@ const CategoriesPage = () => {
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
-          </section>
+          </motion.section>
         );
       })}
     </div>
